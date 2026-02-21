@@ -1,39 +1,27 @@
-# Cloud Run Hello – Local Development Setup (Windows)
+# CloudRun-Hello  
+## Windows Local Setup + Git Workflow (Full Chronological Steps)
 
-## Project Overview
+This document records **exactly what happened step-by-step** while setting up a local Python project for future Cloud Run deployment.
 
-This project documents the local development setup for a Python application that:
-
-- Uses a virtual environment (`.venv`)
-- Loads sensitive configuration from a `.env` file
-- Authenticates locally with a Google Cloud service account
-- Prepares for future Cloud Run deployment
-
-This setup is for local development only.
-Production deployment will use IAM service accounts instead of JSON keys.
+Environment:
+- OS: Windows
+- Terminal: PowerShell
+- Editor: VS Code
+- Python Virtual Environment: `.venv`
+- GitHub repository: CloudRun-Hello
 
 ---
 
-## Environment
+# STEP 1 — Create Python Virtual Environment
 
-- OS: Windows  
-- Terminal: PowerShell  
-- Editor: VS Code  
-- Python: Virtual Environment (`.venv`)  
-- Package: `python-dotenv`
-
----
-
-## 1️⃣ Create Virtual Environment
-
-From the project root directory:
+From project folder:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-After activation, the terminal should display:
+After activation:
 
 ```
 (.venv) PS C:\Users\mirei\OneDrive\Desktop\cloudrun-hello>
@@ -41,65 +29,50 @@ After activation, the terminal should display:
 
 ---
 
-## 2️⃣ Install Required Dependency
-
-Install `python-dotenv` to manage environment variables:
+# STEP 2 — Install python-dotenv
 
 ```powershell
 pip install python-dotenv
 ```
 
-Verify installation:
+Verification:
 
 ```powershell
 pip show python-dotenv
 ```
 
-Expected:
+Package successfully installed inside:
 
 ```
-Version: 1.2.1
-Location: .venv\Lib\site-packages
+.venv\Lib\site-packages
 ```
 
 ---
 
-## 3️⃣ Create `.env` File (Local Development Only)
+# STEP 3 — First Execution Attempt
 
-Create a file named:
-
-```
-.env
+```powershell
+python .\main.py
 ```
 
-Add the following content:
-
-```
-GOOGLE_APPLICATION_CREDENTIALS=C:\Users\mirei\OneDrive\Desktop\cloudrun-hello\calm-snowfall-485503-b4-fe8d076429fb.json
-PROJECT_ID=calm-snowfall-485503-b4
-REGION=northamerica-northeast1
-```
-
-⚠ This file contains sensitive data and must never be committed.
-
----
-
-## ⚠ Issue Encountered
-
-Initially, the `.env` file existed but had 0 bytes, which caused:
+Output:
 
 ```
 Project ID: None
 Credentials Path: None
 ```
 
-Verification command:
+### Problem Identified
+
+`.env` file existed but had 0 bytes.
+
+Verification:
 
 ```powershell
 dir -Force
 ```
 
-It showed:
+Output showed:
 
 ```
 .env    Length: 0
@@ -107,9 +80,9 @@ It showed:
 
 ---
 
-## ✅ Fix Applied
+# STEP 4 — Fix Empty .env File
 
-Rewrote the `.env` file correctly using PowerShell:
+Recreated `.env` using PowerShell:
 
 ```powershell
 @"
@@ -119,7 +92,7 @@ REGION=northamerica-northeast1
 "@ | Set-Content -Encoding utf8 .env
 ```
 
-Verify file content:
+Verification:
 
 ```powershell
 Get-Content .\.env
@@ -127,35 +100,13 @@ Get-Content .\.env
 
 ---
 
-## 4️⃣ Load Environment Variables in Python
-
-`main.py`:
-
-```python
-import os
-from pathlib import Path
-from dotenv import load_dotenv
-
-env_path = Path(__file__).with_name(".env")
-loaded = load_dotenv(dotenv_path=env_path)
-
-print("Loaded .env:", loaded)
-print("Project ID:", os.getenv("PROJECT_ID"))
-print("Credentials Path:", os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
-print("Region:", os.getenv("REGION"))
-```
-
----
-
-## 5️⃣ Verify Local Execution
-
-Run:
+# STEP 5 — Successful Execution
 
 ```powershell
 python .\main.py
 ```
 
-Expected output:
+Output:
 
 ```
 Loaded .env: True
@@ -164,15 +115,156 @@ Credentials Path: C:\Users\mirei\OneDrive\Desktop\cloudrun-hello\calm-snowfall-4
 Region: northamerica-northeast1
 ```
 
-This confirms:
-
-- `.env` loads correctly
-- Environment variables are accessible
-- Local authentication configuration works
+Environment variables correctly loaded.
 
 ---
 
-## 🔐 Security Configuration
+# STEP 6 — Generate requirements.txt
+
+```powershell
+pip freeze > requirements.txt
+```
+
+---
+
+# STEP 7 — Initialize Git
+
+```powershell
+git init
+git status
+```
+
+Untracked files detected:
+- .dockerignore
+- .gitignore
+- README.md
+- main.py
+- requirements.txt
+
+---
+
+# STEP 8 — First Commit Attempt (Error)
+
+Attempted:
+
+```powershell
+git commit -m "Local setup: venv + dotenv + README + requirements"
+```
+
+Error:
+
+```
+nothing added to commit but untracked files present
+```
+
+### Fix
+
+```powershell
+git add .
+git commit -m "Initial local setup: venv + dotenv + README + requirements"
+```
+
+Commit successful.
+
+---
+
+# STEP 9 — Add Remote Repository
+
+```powershell
+git remote add origin git@github.com:mireillehaddad/CloudRun-Hello.git
+git branch -M main
+```
+
+---
+
+# STEP 10 — First Push Error
+
+```powershell
+git push -u origin main
+```
+
+Error:
+
+```
+src refspec main does not match any
+```
+
+Then after proper commit:
+
+```
+rejected (fetch first)
+```
+
+Reason:
+Remote repository already had commits.
+
+---
+
+# STEP 11 — Pull with Rebase
+
+```powershell
+git pull --rebase origin main
+```
+
+Conflict occurred in:
+
+```
+README.md
+```
+
+---
+
+# STEP 12 — Resolve Merge Conflict
+
+1. Open README in VS Code:
+   ```powershell
+   code README.md
+   ```
+
+2. Remove conflict markers:
+   ```
+   <<<<<<<
+   =======
+   >>>>>>>
+   ```
+
+3. Save file
+
+4. Stage resolved file:
+   ```powershell
+   git add README.md
+   ```
+
+5. Continue rebase:
+   ```powershell
+   git rebase --continue
+   ```
+
+Output:
+
+```
+Successfully rebased and updated refs/heads/main.
+```
+
+---
+
+# STEP 13 — Final Push (Success)
+
+```powershell
+git push -u origin main
+```
+
+Output:
+
+```
+branch 'main' set up to track 'origin/main'.
+```
+
+Repository successfully pushed to GitHub.
+
+---
+
+# Security Configuration
 
 Ensure `.gitignore` contains:
 
@@ -183,41 +275,46 @@ Ensure `.gitignore` contains:
 __pycache__/
 ```
 
-This prevents committing:
-
-- Service account JSON keys
-- Environment variables
-- Virtual environment files
+Never commit:
+- Service account JSON
+- .env file
+- Virtual environment
 
 ---
 
-## 📁 Current Project Structure
+# Final Project Structure
 
 ```
 cloudrun-hello/
 │
 ├── main.py
-├── .env                          (local only)
-├── calm-snowfall-485503-b4-fe8d076429fb.json  (local only)
-├── .gitignore
+├── requirements.txt
 ├── README.md
-└── .venv/
+├── .gitignore
+├── .dockerignore
+├── .env                         (local only)
+├── calm-snowfall-...json         (local only)
+└── .venv/                        (local only)
 ```
 
 ---
 
-## Important Notes
+# Key Lessons Learned
 
-- `.env` is used for local development only
-- The service account JSON file must never be committed
-- In production (Cloud Run), authentication should use IAM service accounts instead of JSON keys
+- Always run `git add` before `git commit`
+- A remote repository may already contain commits
+- `git pull --rebase` keeps commit history clean
+- Merge conflicts must be manually resolved
+- `.env` files can exist but be empty — always verify file size
+- Never push secrets to GitHub
 
 ---
 
-Next steps will include:
+# Next Steps
 
-- Creating `requirements.txt`
-- Creating a `Dockerfile`
-- Building the Docker image
-- Deploying to Cloud Run Jobs
-
+- Create Dockerfile
+- Build Docker image
+- Install and configure gcloud CLI
+- Create Artifact Registry
+- Push Docker image
+- Deploy to Cloud Run
